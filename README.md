@@ -10,7 +10,9 @@ Everything runs inside a Docker dev container, so the only thing you need instal
 
 ```
 rust-playground/
-├── notes/              # Learning log: concepts, commands, lessons learned
+├── docker/             # Shell setup copied into the image
+│   ├── .bashrc         # History, completion, aliases
+│   └── starship.toml   # Prompt (bind-mounted, edits apply on new shell)
 ├── examples/           # Self-contained Cargo projects, one folder per example
 │   ├── rust.mk         # Shared cargo targets included by every example
 │   └── <example>/
@@ -18,25 +20,50 @@ rust-playground/
 │       ├── Cargo.toml
 │       ├── Makefile    # Includes ../rust.mk
 │       └── README.md
-├── Dockerfile          # Rust dev image (rustfmt + clippy, non-root user)
+├── notes/              # Learning log: concepts, commands, lessons learned
 ├── compose.yaml        # Dev container, code mount, cargo cache volumes
-├── Makefile            # Host commands: dev, stop, clean
-└── LICENSE
+├── Dockerfile          # Rust dev image (rustfmt + clippy, non-root user)
+├── LICENSE
+└── Makefile            # Host commands: dev, stop, clean
 ```
 
 ## Getting started
 
 **Prerequisites:** [Docker Desktop](https://docs.docker.com/get-docker/), Colima, or Docker Engine with the Compose plugin, plus `make`.
 
+On macOS with Colima, install the `docker-buildx` plugin too and add
+Homebrew's plugin folder to `~/.docker/config.json`
+(`"cliPluginsExtraDirs": ["/opt/homebrew/lib/docker/cli-plugins"]`),
+otherwise builds fall back to the legacy builder. The Makefile's
+`COMPOSE` variable can be `docker compose` or `docker-compose`.
+
 From the repo root on your machine:
 
 ```bash
 make dev     # build the image, start the container, open a shell in it
 make stop    # stop the container (image and caches are kept)
-make clean   # remove the container, network, image, and cache volumes
+make clean   # remove the container, network, image, cache and history volumes
 ```
 
 `make dev` is safe to run again: if the container is already up, it just opens another shell. The repo is mounted at `/workspace`, so edits you make in your editor on the host show up in the container immediately.
+
+### Inside the container
+
+The shell has a one-line [Starship](https://starship.rs) prompt
+(`dev@rust-playground:/workspace (branch *%) $`), tab completion for
+`make`, `cargo`, and `git`, and bash history that survives restarts.
+
+| Alias | Runs |
+|---|---|
+| `ws` / `ex` | `cd /workspace` / `cd /workspace/examples` |
+| `cb` / `cr` / `ct` / `ck` | `cargo build` / `run` / `test` / `check` |
+| `cl` | `cargo clippy --all-targets` |
+
+Prompt changes in `docker/starship.toml` apply when you open a new shell.
+Changes to `docker/.bashrc` need `make dev` to rebuild.
+
+Git markers in the prompt: `*` unstaged, `+` staged, `%` untracked,
+`$` stash, `-` deleted, `=` conflicts, `>`/`<`/`<>` ahead/behind/diverged.
 
 ### Working on an example
 
@@ -75,7 +102,16 @@ make ci                   # fmt check + clippy + tests
 3. **How to run it:** exact commands
 4. **What I learned:** gotchas and notes
 
+### Troubleshooting
+
+If `cargo build` can't create `target/`, check that `dev` can write to
+`/workspace`: `touch /workspace/test && rm /workspace/test` inside the
+container should succeed. If it doesn't, the bind mount's permissions
+don't match your host user.
+
 ## Topics
+
+> Kind reminder: never try to "finish" (learning) a language. Reach productive fluency by becoming able to read an unfamiliar codebase, make a safe change, debug failures, test behavior, profile bottlenecks, and explain trade-offs.
 
 A running list of topics covered in [`notes/`](notes/).
 
