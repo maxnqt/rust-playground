@@ -1,0 +1,59 @@
+# Classic one-line prompt, in the style of Debian's bash prompt + git-prompt:
+#
+#   dev@rust-playground:/workspace (users/maxnqt/initial-setup *%) $
+#
+# Git markers (same as git's own __git_ps1):
+#   *  unstaged changes      +  staged changes     %  untracked files
+#   $  stash present         -  deleted files      =  merge conflicts
+#   >  ahead of remote       <  behind remote      <> diverged
+#
+# Docs: https://starship.rs/config/
+
+add_newline = false
+format = '$username[@](bold green)$hostname[:](bold white)$directory( \($git_branch$git_state$git_status\))$character'
+
+[username]
+show_always = true
+format = "[$user]($style)"
+style_user = "bold green"
+style_root = "bold red"
+
+[hostname]
+ssh_only = false
+format = "[$hostname]($style)"
+style = "bold green"
+
+[directory]
+format = "[$path]($style)"
+style = "bold blue"
+read_only = ""
+truncation_length = 8
+truncate_to_repo = false
+
+[git_branch]
+format = "[$branch]($style)"
+style = "bold yellow"
+
+[git_state]
+format = "[|$state]($style)"
+style = "bold red"
+
+[git_status]
+format = '( [$conflicted$stashed$deleted$modified$staged$untracked$ahead_behind]($style))'
+style = "bold red"
+conflicted = "="
+stashed = '\$'
+deleted = "-"
+modified = "*"
+staged = "+"
+untracked = "%"
+renamed = ""
+ahead = ">"
+behind = "<"
+diverged = "<>"
+up_to_date = ""
+
+[character]
+format = " $symbol "
+success_symbol = '[\$](bold white)'
+error_symbol = '[\$](bold red)'
